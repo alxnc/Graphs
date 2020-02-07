@@ -20,4 +20,4 @@ This will be conversion of my old program created at college at 2002.
 Just to learn python at 2020.
 
 ## Contact
-Created by [@alx](alx_nc@tlen.pl) - feel free to contact me!
+Created by [@alx](mailto:alx_nc@tlen.pl) - feel free to contact me!
