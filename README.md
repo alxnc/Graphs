@@ -8,7 +8,7 @@ Application for drawing graphs.
 Project started. For now only checks brackets in string.
 
 To-do list:
-* parsing math functions from string 
+* parsing math functions from string. 
 * calculate f(x)
 * draw graph
 
