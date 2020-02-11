@@ -8,9 +8,14 @@ Just to learn python at 2020y.
 
 """
 
+OPERS = "+-*/^"
+
 import math 
 
 #math.radians() - > ze stopni na raniany /
+
+fx = [] #for function values 
+
 
 def checkBrackets(sFun):
     """
@@ -35,5 +40,24 @@ def checkBrackets(sFun):
     if(obr != cbr): wynik = -1
     return wynik
 
+def analizeOperations(sFun):
+    """
+     Function checks if there are two operators one after the other
+     i: string with function
+     r: true if ok / false when err
+    """
+    ok = True # returning var
+    sFun.replace(" ","")
+    for i in range(len(sFun)):
+        if sFun[i] in OPERS:
+            if i>=1:
+                if sFun[i-1] in OPERS:
+                    #two opers side by side
+                    ok = False
+    return ok    
+
+
+
 func = "sin+20+2"
 print(checkBrackets(func))
+print(analizeOperations(func))
