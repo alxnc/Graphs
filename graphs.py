@@ -122,10 +122,16 @@ def toRPN(sFun):
             if OP_PRIO[sFun[index]] > OP_PRIO[stos[-1]]:    #if oper in sFun has higher prio add it to stos
                 stos.append(sFun[index])
                 index += 1
-                continue
-            else:                
+                continue            
+            else:                                               
                 while len(stos):                                #if oper in sFun has prio <= oper in stos
-                    if OP_PRIO[stos[-1]]>=OP_PRIO[sFun[index]]: #move all opers from stos to wyjscie with prio >= oper 
+                                                                #move all opers from stos to wyjscie with prio >= oper                     
+                    if (OP_PRIO[stos[-1]]>OP_PRIO[sFun[index]]
+                        or (
+                            OP_PRIO[stos[-1]] == (OP_PRIO[sFun[index]] 
+                            and OP_PRIO[sFun[index]]<3)
+                        )
+                    ): 
                         wyjscie.append(stos[-1])
                         del stos[-1]
                     else: break
@@ -164,3 +170,5 @@ func = "12+2*(3*4+10/5)"
 #print(analizeOperations(func))
 RPNlist=toRPN(func)
 print(evalRPN(RPNlist))
+
+print(evalRPN(toRPN("3^3^2")))
