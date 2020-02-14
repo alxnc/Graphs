@@ -8,14 +8,38 @@ Just to learn python at 2020y.
 
 """
 
-OPERS = "+-*/^"
-
+import re
+#import time
+import operator
 import math 
 
-#math.radians() - > ze stopni na raniany /
+FUNCTIONS = {
+    'sin': lambda x:math.sin(math.radians(x)),
+    'cos': lambda x:math.cos(math.radians(x)),
+}
 
-fx = [] #for function values 
+OPERS = {
+    '+': operator.add,
+    '-': operator.sub,
+    '*': operator.mul,
+    '/': operator.truediv,
+    '^': operator.pow,    
+}
 
+OP_PRIO = {
+    '(':0,
+    '+':1,
+    '-':1,
+    ')':1,
+    '*':2,
+    '/':2,
+    '^':3,
+}
+
+NUM_MATCH = re.compile(
+'(?:[1-9][0-9]*|0)'
+'(?:[.][0-9]+)?'
+)
 
 def checkBrackets(sFun):
     """
@@ -58,6 +82,85 @@ def analizeOperations(sFun):
 
 
 
-func = "sin+20+2"
-print(checkBrackets(func))
-print(analizeOperations(func))
+def toRPN(sFun):
+    """
+    Function convert infix string to RPN
+    i: string with function infix
+    r: RPN 
+    """
+    stos = []       #stack
+    wyjscie = []    #exit string
+
+    index = 0
+    while index < len(sFun):
+        expr = sFun[index:]
+        is_num = NUM_MATCH.match(expr)
+        if is_num:                              #if num put on wyjscie
+            num = is_num.group(0)
+            wyjscie.append(float(num))            
+            index += len(num)
+            continue
+        if sFun[index] == "(":                  #if "(" put on stos
+            stos.append(sFun[index])
+            index += 1
+            continue
+        if sFun[index] == ")":                  
+            for i in range(len(stos)-1,0,-1):   #if ")" move all operands till "(" to wyjscie LIFO
+                if stos[i] == "(":
+                    del stos[i]
+                    break
+                else:
+                    wyjscie.append(stos[i])
+                    del stos[i]
+            index += 1
+            continue
+        if sFun[index] in OPERS:                
+            if not stos:                        #if stos is empty insert operator
+                stos.append(sFun[index])
+                index += 1
+                continue
+            if OP_PRIO[sFun[index]] > OP_PRIO[stos[-1]]:    #if oper in sFun has higher prio add it to stos
+                stos.append(sFun[index])
+                index += 1
+                continue
+            else:                
+                while len(stos):                                #if oper in sFun has prio <= oper in stos
+                    if OP_PRIO[stos[-1]]>=OP_PRIO[sFun[index]]: #move all opers from stos to wyjscie with prio >= oper 
+                        wyjscie.append(stos[-1])
+                        del stos[-1]
+                    else: break
+                stos.append(sFun[index])
+                index += 1                
+    # move stos to wyjscie LIFO
+    while len(stos):
+        if stos[-1] not in ["(",")",]:
+            wyjscie.append(stos[-1])
+        del stos[-1]
+    return wyjscie
+
+def evalRPN(sRPN):
+    """
+    Function evaluate RPN string 
+    i: RPN string 
+    r: value
+    """
+    stos = [] #stack
+    while len(sRPN):        
+        if isinstance(sRPN[0],float):
+            stos.append(sRPN[0])
+            del sRPN[0]
+            continue
+        if sRPN[0] in OPERS:
+            func = OPERS[sRPN[0]]           #get function for oper
+            val = func(stos[-2],stos[-1])                
+            del stos[-2:]                   #remove used vals from stos
+            del sRPN[0]                     
+            stos.append(val)
+            continue    
+    return stos[0] #return result
+
+func = "12+2*(3*4+10/5)"
+#print(checkBrackets(func))
+#print(analizeOperations(func))
+RPNlist=toRPN(func)
+print(evalRPN(RPNlist))
