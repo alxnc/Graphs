@@ -7,8 +7,8 @@ Application for calculating given mathematical string and drawing graphs.
 ## Features
 Project started. 
 Working: 
-    * checking given string for errors 
-    * parsing and calculating
+* checking given string for errors
+* parsing and calculating
 
 To-do list:
 * calculate f(x)
