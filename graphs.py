@@ -41,6 +41,12 @@ NUM_MATCH = re.compile(
 '(?:[.][0-9]+)?'
 )
 
+FUN_MATCH = re.compile(
+'(?:[a-z]{1,}[(])'
+)
+
+x_val = 1           #for tests only
+
 def checkBrackets(sFun):
     """
      Function checks for brackets in string
@@ -86,7 +92,7 @@ def toRPN(sFun):
     """
     Function convert infix string to RPN
     i: string with function infix
-    r: RPN 
+    r: RPN[] 
     """
     stos = []       #stack
     wyjscie = []    #exit string
@@ -95,11 +101,21 @@ def toRPN(sFun):
     while index < len(sFun):
         expr = sFun[index:]
         is_num = NUM_MATCH.match(expr)
+        is_fun = FUN_MATCH.match(expr)          
         if is_num:                              #if num put on wyjscie
             num = is_num.group(0)
             wyjscie.append(float(num))            
             index += len(num)
-            continue
+            continue            
+        if is_fun:                              #if function put on stos
+            fun = is_fun.group(0)
+            fun = fun[:-1]                      #remove "("
+            if fun in FUNCTIONS:
+                stos.append(fun)
+                index += len(fun)
+                continue                
+            else:
+                raise("Błąd! Nieznana funkcja.")
         if sFun[index] == "(":                  #if "(" put on stos
             stos.append(sFun[index])
             index += 1
@@ -108,12 +124,19 @@ def toRPN(sFun):
             for i in range(len(stos)-1,0,-1):   #if ")" move all operands till "(" to wyjscie LIFO
                 if stos[i] == "(":
                     del stos[i]
+                    if stos[i-1] in FUNCTIONS:
+                        wyjscie.append(stos[i-1])
+                        del stos[i-1]
                     break
                 else:
                     wyjscie.append(stos[i])
-                    del stos[i]
+                    del stos[i]                
             index += 1
             continue
+        if sFun[index].lower() == "x":                  #insert x value on wyjscie
+            wyjscie.append(float(x_val))
+            index += 1
+            continue        
         if sFun[index] in OPERS:                
             if not stos:                        #if stos is empty insert operator
                 stos.append(sFun[index])
@@ -162,13 +185,23 @@ def evalRPN(sRPN):
             del stos[-2:]                   #remove used vals from stos
             del sRPN[0]                     
             stos.append(val)
+            continue
+        if sRPN[0] in FUNCTIONS:
+            func = FUNCTIONS[sRPN[0]]           #get function 
+            val = func(stos[-1])                
+            del stos[-1]                   #remove used vals from stos
+            del sRPN[0]                     
+            stos.append(val)
             continue    
     return stos[0] #return result
 
-func = "12+2*(3*4+10/5)"
+func = "sin(2*x+28)+12+2*(3*4+10/5)"
+
+
 #print(checkBrackets(func))
 #print(analizeOperations(func))
 RPNlist=toRPN(func)
 print(evalRPN(RPNlist))
 
 print(evalRPN(toRPN("3^3^2")))
+
