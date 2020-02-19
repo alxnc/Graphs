@@ -198,10 +198,5 @@ def evalRPN(sRPN):
 func = "sin(2*x+28)+12+2*(3*4+10/5)"
 
 
-#print(checkBrackets(func))
-#print(analizeOperations(func))
-RPNlist=toRPN(func)
-print(evalRPN(RPNlist))
-
 print(evalRPN(toRPN("3^3^2")))
 
