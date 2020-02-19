@@ -1,14 +1,16 @@
 # Graphs
-Application for drawing graphs. 
+Application for calculating given mathematical string and drawing graphs. 
 
 ## Technologies
 * python 3
 
 ## Features
-Project started. For now only checks brackets in string.
+Project started. 
+Working: 
+    * checking given string for errors 
+    * parsing and calculating
 
 To-do list:
-* parsing math functions from string. 
 * calculate f(x)
 * draw graph
 
