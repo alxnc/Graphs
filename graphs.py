@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Graphs - Draws a graph from given equation.
+Graphs - Calculate expression or draws a graph from given equation.
 
 This is a conversion of my old program created at college at 2002y. 
 Just to learn python at 2020y.
@@ -9,9 +9,9 @@ Just to learn python at 2020y.
 """
 
 import re
-#import time
 import operator
 import math 
+import matplotlib.pyplot as plt
 
 DEC_PLACES = 3      #number of decimal places after rounding
 
@@ -19,6 +19,7 @@ FUNCTIONS = {
     'sin': lambda x:math.sin(math.radians(x)),
     'cos': lambda x:math.cos(math.radians(x)),
     'tan': lambda x:math.tan(math.radians(x)),
+    'ln': lambda x:math.log(x),
 }
 
 OPERS = {
@@ -45,7 +46,7 @@ NUM_MATCH = re.compile(
 )
 
 FUN_MATCH = re.compile(
-'(?:[a-z]{1,}[(])'
+'(?:[a-z]{2,}[(])'
 )
 
 def checkBrackets(sFun):
@@ -196,11 +197,11 @@ def evalExpr(sFun, x_val = 1):
     stos = [] #stack
     #check string
     if not checkBrackets(sFun):
-        raise SyntaxError("Wyrażenie posiada niezamknięte nawiasy!")
+        raise SyntaxError("The expression have unclosed brackets!")
     elif not analizeOperations(sFun):      
-        raise SyntaxError("Wyrażenie posiada błędnie zapisane operatory!")
+        raise SyntaxError("The expression have incorrectly written operators!")
     elif not analizeOpAfterCB(sFun):
-        raise SyntaxError("Brak operatora po nawiasie zamykającym!")
+        raise SyntaxError("Missing operator after closing bracket!")
     else:
         sRPN = toRPN(sFun,x_val)
         while len(sRPN):        
@@ -224,12 +225,69 @@ def evalExpr(sFun, x_val = 1):
                 continue    
         return round(stos[0],DEC_PLACES)        #return rounded result
     
+def showHelp():
+    print("Allowed operators and functions:")
+    print("+-*/^")
+    print("sin, cos, tan, ln")
+    print("You can enter arithmetic expressions like:")
+    print("2*(3-4)^2")
+    print("2*sin(30-4*2)")
+    print("or functions like:")
+    print("2*x^2+3*x+1")
+    print("2*sin(x)*x+1")
 
-func = "sin(2*x+28)+12+2*(3*4+10/5)"
-print(evalExpr(func))
-func = "(-1+2)*2+tan(45)"
-print(evalExpr(func))
-func = "sin(29+tan(45))*2^2"
-print(evalExpr(func))
-func = "-1-(-1)"
-print(evalExpr(func))
+def main():    
+    expr = input("Enter an arithmetic expression (type help for info):")    
+    if expr.lower() == "help":
+        showHelp()
+        exit()
+    if "x" in expr:
+        option = input("Expression cotains 'x' variable, enter 'r' for range or 'v' for value:")
+        while option.lower() != 'r' and option.lower() != 'v':
+            option = input("Expression cotains 'x' variable, enter 'r' for range or 'v' for value:")
+        if option == 'v':
+            x_val = ''
+            while not isinstance(x_val,float):
+                try:
+                    x_val = float(input("Enter x value:"))
+                except:
+                    print("That was no valid number.")
+            print("{0} = {1}".format(expr,evalExpr(expr,x_val)))
+        else:
+            x_val = ''
+            x_start = ''
+            x_end = ''
+            x_step = ''
+            while (not isinstance(x_start,float) 
+                    and not isinstance(x_end,float)
+                    and not isinstance(x_step,float)
+                ):
+                try:
+                    x_start, x_end, x_step = map(float,input("Enter start value, end value and step for range (eg.: 0,5,1): ").split(","))
+                except:
+                    print("That was no valid number.")
+            #make a graph
+            x = []
+            y = []
+            #calculating values
+            i = x_start
+            while i <= x_end:
+                x.append(i)
+                y.append(evalExpr(expr, i))
+                i += x_step
+            # plotting the points  
+            plt.plot(x, y) 
+            # naming the x axis 
+            plt.xlabel('x') 
+            # naming the y axis 
+            plt.ylabel('f(x)') 
+            # giving a title to my graph 
+            expr += F"\n in range {x_start} to {x_end} step {x_step}"
+            plt.title(expr)   
+            # function to show the plot 
+            plt.show() 
+    else:
+        print("{0} = {1}".format(expr,evalExpr(expr)))
+
+if __name__ == "__main__":
+  main()
