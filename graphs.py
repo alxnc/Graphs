@@ -13,9 +13,12 @@ import re
 import operator
 import math 
 
+DEC_PLACES = 3      #number of decimal places after rounding
+
 FUNCTIONS = {
     'sin': lambda x:math.sin(math.radians(x)),
     'cos': lambda x:math.cos(math.radians(x)),
+    'tan': lambda x:math.tan(math.radians(x)),
 }
 
 OPERS = {
@@ -45,29 +48,26 @@ FUN_MATCH = re.compile(
 '(?:[a-z]{1,}[(])'
 )
 
-x_val = 1           #for tests only
-
 def checkBrackets(sFun):
     """
-     Function checks for brackets in string
+     Function checks brackets in string
      i: string with function
-     r: 0 -> no brackets / 1 -> brackets ok / -1 -> brackets not ok
+     r: 0 -> brackets failure / 1 -> brackets ok 
     """
-    obr = 0 # int open brackets counter
-    cbr = 0 # int closing brackets counter
+
     wynik = 0 # int result of scan
 
     if "(" or ")" in sFun:
         for x in sFun:
             if x == "(":
-                obr += 1
-                wynik = 1
+                wynik += 1
                 continue
             elif x == ")":
-                cbr += 1
+                wynik -= 1
                 continue
 
-    if(obr != cbr): wynik = -1
+    if(wynik != 0): wynik = 0
+    else: wynik = 1
     return wynik
 
 def analizeOperations(sFun):
@@ -84,11 +84,27 @@ def analizeOperations(sFun):
                 if sFun[i-1] in OPERS:
                     #two opers side by side
                     ok = False
+                    break
     return ok    
 
+def analizeOpAfterCB(sFun):
+    """
+     Function checks if there is operator after closing bracket
+     i: string with function
+     r: true if ok / false when err
+    """
+    ok = True # returning var
+    sFun.replace(" ","")
+    for i in range(len(sFun)):
+        if sFun[i] == ")" and (i+1)<len(sFun):
+            if sFun[i+1] != ")":
+                if not sFun[i+1] in OPERS:
+                    #missing operator after closing bracket
+                    ok = False
+                    break
+    return ok    
 
-
-def toRPN(sFun):
+def toRPN(sFun,x_val):
     """
     Function convert infix string to RPN
     i: string with function infix
@@ -137,9 +153,13 @@ def toRPN(sFun):
             wyjscie.append(float(x_val))
             index += 1
             continue        
-        if sFun[index] in OPERS:                
+        if sFun[index] in OPERS:        
+            if index == 0:                  #if this is first char of string insert 0.0 before it
+                wyjscie.append(0.0)
+            elif sFun[index-1] == "(":
+                wyjscie.append(0.0)         #if operator is after openning bracket insert 0.0 before it
             if not stos:                        #if stos is empty insert operator
-                stos.append(sFun[index])
+                stos.append(sFun[index])               
                 index += 1
                 continue
             if OP_PRIO[sFun[index]] > OP_PRIO[stos[-1]]:    #if oper in sFun has higher prio add it to stos
@@ -167,36 +187,49 @@ def toRPN(sFun):
         del stos[-1]
     return wyjscie
 
-def evalRPN(sRPN):
+def evalExpr(sFun, x_val = 1):
     """
     Function evaluate RPN string 
-    i: RPN string 
+    i: string with function infix 
     r: value
     """
     stos = [] #stack
-    while len(sRPN):        
-        if isinstance(sRPN[0],float):
-            stos.append(sRPN[0])
-            del sRPN[0]
-            continue
-        if sRPN[0] in OPERS:
-            func = OPERS[sRPN[0]]           #get function for oper
-            val = func(stos[-2],stos[-1])                
-            del stos[-2:]                   #remove used vals from stos
-            del sRPN[0]                     
-            stos.append(val)
-            continue
-        if sRPN[0] in FUNCTIONS:
-            func = FUNCTIONS[sRPN[0]]           #get function 
-            val = func(stos[-1])                
-            del stos[-1]                   #remove used vals from stos
-            del sRPN[0]                     
-            stos.append(val)
-            continue    
-    return stos[0] #return result
+    #check string
+    if not checkBrackets(sFun):
+        raise SyntaxError("Wyrażenie posiada niezamknięte nawiasy!")
+    elif not analizeOperations(sFun):      
+        raise SyntaxError("Wyrażenie posiada błędnie zapisane operatory!")
+    elif not analizeOpAfterCB(sFun):
+        raise SyntaxError("Brak operatora po nawiasie zamykającym!")
+    else:
+        sRPN = toRPN(sFun,x_val)
+        while len(sRPN):        
+            if isinstance(sRPN[0],float):
+                stos.append(sRPN[0])
+                del sRPN[0]
+                continue
+            if sRPN[0] in OPERS:
+                func = OPERS[sRPN[0]]           #get function for oper
+                val = func(stos[-2],stos[-1])                
+                del stos[-2:]                   #remove used vals from stos
+                del sRPN[0]                     
+                stos.append(val)
+                continue
+            if sRPN[0] in FUNCTIONS:
+                func = FUNCTIONS[sRPN[0]]           #get function 
+                val = func(stos[-1])                
+                del stos[-1]                   #remove used vals from stos
+                del sRPN[0]                     
+                stos.append(val)
+                continue    
+        return round(stos[0],DEC_PLACES)        #return rounded result
+    
 
 func = "sin(2*x+28)+12+2*(3*4+10/5)"
-
-
-print(evalRPN(toRPN("3^3^2")))
-
+print(evalExpr(func))
+func = "(-1+2)*2+tan(45)"
+print(evalExpr(func))
+func = "sin(29+tan(45))*2^2"
+print(evalExpr(func))
+func = "-1-(-1)"
+print(evalExpr(func))
