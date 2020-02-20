@@ -15,8 +15,8 @@ Allowed operators: +-*/^<br/>
 Allowed functions: sin, cos, tan, ln<br/>
 Example strings:
 * 2*(-3+4)^2+(3*2+4)/2
-* 2*x^2+3*x+1
-* sin(2*x)+tan(3*x/2)
+* 2\*x^2+3\*x+1
+* sin(2\*x)+tan(3\*x/2)
 
 ## Status
 Project is : _completed_
