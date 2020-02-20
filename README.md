@@ -12,7 +12,7 @@ Application for calculating given mathematical string and drawing graphs.
 
 ## Usage
 Allowed operators: +-*/^<br/>
-Allowed functions: sin, cos, tan, ln
+Allowed functions: sin, cos, tan, ln<br/>
 Example strings:
 * 2*(-3+4)^2+(3*2+4)/2
 * 2*x^2+3*x+1
