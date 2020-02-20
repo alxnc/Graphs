@@ -5,20 +5,16 @@ Application for calculating given mathematical string and drawing graphs.
 * python 3
 
 ## Features
-Project started. 
-Working: 
 * checking given string for errors
 * parsing and calculating
-
-To-do list:
-* calculate f(x)
-* draw graph
+* calculate f(x) for given x value
+* calculate f(x) for given range and plot a graph
 
 ## Status
-Project is: _in progress_
+Project is : _completed_
 
 ## Inspiration
-This will be conversion of my old program created at college at 2002. 
+This is conversion of my old program created at college at 2002. 
 Just to learn python at 2020.
 
 ## Contact
