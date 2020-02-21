@@ -12,6 +12,7 @@ import re
 import operator
 import math 
 import matplotlib.pyplot as plt
+from itertools import tee, groupby
 
 DEC_PLACES = 3      #number of decimal places after rounding
 
@@ -49,63 +50,77 @@ FUN_MATCH = re.compile(
 '(?:[a-z]{2,}[(])'
 )
 
-def checkBrackets(sFun):
+def check_brackets(fun):
     """
      Function checks brackets in string
-     i: string with function
-     r: 0 -> brackets failure / 1 -> brackets ok 
+     fun: string with function
+     returns: 0 -> brackets failure / 1 -> brackets ok 
     """
+    open_brackets = 0
+    for c in fun:
+        if c == "(":
+            open_brackets += 1
+        elif c == ")":
+            if open_brackets:
+                open_brackets -= 1
+            else:
+                return False
+    return open_brackets == 0
 
-    wynik = 0 # int result of scan
-
-    if "(" or ")" in sFun:
-        for x in sFun:
-            if x == "(":
-                wynik += 1
-                continue
-            elif x == ")":
-                wynik -= 1
-                continue
-
-    if(wynik != 0): wynik = 0
-    else: wynik = 1
-    return wynik
-
-def analizeOperations(sFun):
+def old_check_dbl_operators(fun):
     """
      Function checks if there are two operators one after the other
-     i: string with function
-     r: true if ok / false when err
-    """
-    ok = True # returning var
-    sFun.replace(" ","")
-    for i in range(len(sFun)):
-        if sFun[i] in OPERS:
-            if i>=1:
-                if sFun[i-1] in OPERS:
+     fun: string with function
+     returns: true if ok / false when err
+    """        
+    for i in range(1,len(fun)):
+        if fun[i] in OPERS:
+                if fun[i-1] in OPERS:
                     #two opers side by side
-                    ok = False
-                    break
-    return ok    
+                    return False
+    return True    
 
-def analizeOpAfterCB(sFun):
+def check_dbl_operators(fun):
+    """
+     Function checks if there are two operators one after the other
+     s: string with function
+     returns: true if ok / false when err
+    """
+    is_oper = map(lambda x: x in OPERS, fun)
+    return all(len(list(group)) == 1 for x, group in groupby(is_oper) if x)    
+
+def old_check_op_after_cb(fun):
     """
      Function checks if there is operator after closing bracket
      i: string with function
      r: true if ok / false when err
     """
-    ok = True # returning var
-    sFun.replace(" ","")
-    for i in range(len(sFun)):
-        if sFun[i] == ")" and (i+1)<len(sFun):
-            if sFun[i+1] != ")":
-                if not sFun[i+1] in OPERS:
-                    #missing operator after closing bracket
-                    ok = False
-                    break
-    return ok    
+    for i in range(len(fun)-1):
+        if fun[i] == ")" and (fun[i+1] != ")"
+                            and not fun[i+1] in OPERS):
+                            return False
+    return True    
 
-def toRPN(sFun,x_val):
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
+def check_op_after_cb(fun):
+    """
+     Function checks if there is operator after closing bracket
+     fun: string with function
+     returns: true if ok / false when err
+    """
+    for c1, c2 in pairwise(fun):
+        if (c1 == ")" 
+            and c2 not in OPERS 
+            and c2 != ")"):
+            return False
+    return True
+
+def to_RPN(fun,x_val):
     """
     Function convert infix string to RPN
     i: string with function infix
@@ -115,8 +130,8 @@ def toRPN(sFun,x_val):
     wyjscie = []    #exit string
 
     index = 0
-    while index < len(sFun):
-        expr = sFun[index:]
+    while index < len(fun):
+        expr = fun[index:]
         is_num = NUM_MATCH.match(expr)
         is_fun = FUN_MATCH.match(expr)          
         if is_num:                              #if num put on wyjscie
@@ -133,11 +148,11 @@ def toRPN(sFun,x_val):
                 continue                
             else:
                 raise("Błąd! Nieznana funkcja.")
-        if sFun[index] == "(":                  #if "(" put on stos
-            stos.append(sFun[index])
+        if fun[index] == "(":                  #if "(" put on stos
+            stos.append(fun[index])
             index += 1
             continue
-        if sFun[index] == ")":                  
+        if fun[index] == ")":                  
             for i in range(len(stos)-1,0,-1):   #if ")" move all operands till "(" to wyjscie LIFO
                 if stos[i] == "(":
                     del stos[i]
@@ -150,36 +165,36 @@ def toRPN(sFun,x_val):
                     del stos[i]                
             index += 1
             continue
-        if sFun[index].lower() == "x":                  #insert x value on wyjscie
+        if fun[index].lower() == "x":                  #insert x value on wyjscie
             wyjscie.append(float(x_val))
             index += 1
             continue        
-        if sFun[index] in OPERS:        
+        if fun[index] in OPERS:        
             if index == 0:                  #if this is first char of string insert 0.0 before it
                 wyjscie.append(0.0)
-            elif sFun[index-1] == "(":
+            elif fun[index-1] == "(":
                 wyjscie.append(0.0)         #if operator is after openning bracket insert 0.0 before it
             if not stos:                        #if stos is empty insert operator
-                stos.append(sFun[index])               
+                stos.append(fun[index])               
                 index += 1
                 continue
-            if OP_PRIO[sFun[index]] > OP_PRIO[stos[-1]]:    #if oper in sFun has higher prio add it to stos
-                stos.append(sFun[index])
+            if OP_PRIO[fun[index]] > OP_PRIO[stos[-1]]:    #if oper in fun has higher prio add it to stos
+                stos.append(fun[index])
                 index += 1
                 continue            
             else:                                               
-                while len(stos):                                #if oper in sFun has prio <= oper in stos
+                while len(stos):                                #if oper in fun has prio <= oper in stos
                                                                 #move all opers from stos to wyjscie with prio >= oper                     
-                    if (OP_PRIO[stos[-1]]>OP_PRIO[sFun[index]]
+                    if (OP_PRIO[stos[-1]]>OP_PRIO[fun[index]]
                         or (
-                            OP_PRIO[stos[-1]] == (OP_PRIO[sFun[index]] 
-                            and OP_PRIO[sFun[index]]<3)
+                            OP_PRIO[stos[-1]] == (OP_PRIO[fun[index]] 
+                            and OP_PRIO[fun[index]]<3)
                         )
                     ): 
                         wyjscie.append(stos[-1])
                         del stos[-1]
                     else: break
-                stos.append(sFun[index])
+                stos.append(fun[index])
                 index += 1                
     # move stos to wyjscie LIFO
     while len(stos):
@@ -188,42 +203,32 @@ def toRPN(sFun,x_val):
         del stos[-1]
     return wyjscie
 
-def evalExpr(sFun, x_val = 1):
+def eval_expr(fun, x_val = 1):
     """
     Function evaluate RPN string 
     i: string with function infix 
     r: value
-    """
-    stos = [] #stack
+    """   
     #check string
-    if not checkBrackets(sFun):
+    if not check_brackets(fun):
         raise SyntaxError("The expression have unclosed brackets!")
-    elif not analizeOperations(sFun):      
+    elif not check_dbl_operators(fun):      
         raise SyntaxError("The expression have incorrectly written operators!")
-    elif not analizeOpAfterCB(sFun):
+    elif not check_op_after_cb(fun):
         raise SyntaxError("Missing operator after closing bracket!")
-    else:
-        sRPN = toRPN(sFun,x_val)
-        while len(sRPN):        
-            if isinstance(sRPN[0],float):
-                stos.append(sRPN[0])
-                del sRPN[0]
-                continue
-            if sRPN[0] in OPERS:
-                func = OPERS[sRPN[0]]           #get function for oper
-                val = func(stos[-2],stos[-1])                
-                del stos[-2:]                   #remove used vals from stos
-                del sRPN[0]                     
-                stos.append(val)
-                continue
-            if sRPN[0] in FUNCTIONS:
-                func = FUNCTIONS[sRPN[0]]           #get function 
-                val = func(stos[-1])                
-                del stos[-1]                   #remove used vals from stos
-                del sRPN[0]                     
-                stos.append(val)
-                continue    
-        return round(stos[0],DEC_PLACES)        #return rounded result
+    
+    stack = [] 
+    for x in to_RPN(fun, x_val):
+        if isinstance(x, float):
+            stack.append(x)
+        elif x in OPERS:
+            b, a = stack.pop(), stack.pop()
+            stack.append(OPERS[x](a, b))
+        elif x in FUNCTIONS:
+            stack.append(FUNCTIONS[x](stack.pop()))
+    if len(stack) != 1:
+        raise SyntaxError("More than one value remains on stack")
+    return round(stack[0], DEC_PLACES)        #return rounded result
     
 def showHelp():
     print("Allowed operators and functions:")
@@ -252,7 +257,7 @@ def main():
                     x_val = float(input("Enter x value:"))
                 except:
                     print("That was no valid number.")
-            print("{0} = {1}".format(expr,evalExpr(expr,x_val)))
+            print("{0} = {1}".format(expr,eval_expr(expr,x_val)))
         else:
             x_val = ''
             x_start = ''
@@ -273,7 +278,7 @@ def main():
             i = x_start
             while i <= x_end:
                 x.append(i)
-                y.append(evalExpr(expr, i))
+                y.append(eval_expr(expr, i))
                 i += x_step
             # plotting the points  
             plt.plot(x, y) 
@@ -287,7 +292,7 @@ def main():
             # function to show the plot 
             plt.show() 
     else:
-        print("{0} = {1}".format(expr,evalExpr(expr)))
+        print("{0} = {1}".format(expr,eval_expr(expr)))
 
 if __name__ == "__main__":
   main()
