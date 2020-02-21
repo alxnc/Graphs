@@ -120,7 +120,7 @@ def check_op_after_cb(fun):
             return False
     return True
 
-def to_RPN(fun,x_val):
+def to_RPN(sfun,x_val):
     """
     Function convert infix string to RPN
     i: string with function infix
@@ -130,8 +130,8 @@ def to_RPN(fun,x_val):
     wyjscie = []    #exit string
 
     index = 0
-    while index < len(fun):
-        expr = fun[index:]
+    while index < len(sfun):
+        expr = sfun[index:]
         is_num = NUM_MATCH.match(expr)
         is_fun = FUN_MATCH.match(expr)          
         if is_num:                              #if num put on wyjscie
@@ -148,11 +148,11 @@ def to_RPN(fun,x_val):
                 continue                
             else:
                 raise("Błąd! Nieznana funkcja.")
-        if fun[index] == "(":                  #if "(" put on stos
-            stos.append(fun[index])
+        if sfun[index] == "(":                  #if "(" put on stos
+            stos.append(sfun[index])
             index += 1
             continue
-        if fun[index] == ")":                  
+        if sfun[index] == ")":                  
             for i in range(len(stos)-1,0,-1):   #if ")" move all operands till "(" to wyjscie LIFO
                 if stos[i] == "(":
                     del stos[i]
@@ -165,36 +165,36 @@ def to_RPN(fun,x_val):
                     del stos[i]                
             index += 1
             continue
-        if fun[index].lower() == "x":                  #insert x value on wyjscie
+        if sfun[index].lower() == "x":                  #insert x value on wyjscie
             wyjscie.append(float(x_val))
             index += 1
             continue        
-        if fun[index] in OPERS:        
+        if sfun[index] in OPERS:        
             if index == 0:                  #if this is first char of string insert 0.0 before it
                 wyjscie.append(0.0)
-            elif fun[index-1] == "(":
+            elif sfun[index-1] == "(":
                 wyjscie.append(0.0)         #if operator is after openning bracket insert 0.0 before it
             if not stos:                        #if stos is empty insert operator
-                stos.append(fun[index])               
+                stos.append(sfun[index])               
                 index += 1
                 continue
-            if OP_PRIO[fun[index]] > OP_PRIO[stos[-1]]:    #if oper in fun has higher prio add it to stos
-                stos.append(fun[index])
+            if OP_PRIO[sfun[index]] > OP_PRIO[stos[-1]]:    #if oper in fun has higher prio add it to stos
+                stos.append(sfun[index])
                 index += 1
                 continue            
             else:                                               
                 while len(stos):                                #if oper in fun has prio <= oper in stos
                                                                 #move all opers from stos to wyjscie with prio >= oper                     
-                    if (OP_PRIO[stos[-1]]>OP_PRIO[fun[index]]
+                    if (OP_PRIO[stos[-1]]>OP_PRIO[sfun[index]]
                         or (
-                            OP_PRIO[stos[-1]] == (OP_PRIO[fun[index]] 
-                            and OP_PRIO[fun[index]]<3)
+                            OP_PRIO[stos[-1]] == (OP_PRIO[sfun[index]] 
+                            and OP_PRIO[sfun[index]]<3)
                         )
                     ): 
                         wyjscie.append(stos[-1])
                         del stos[-1]
                     else: break
-                stos.append(fun[index])
+                stos.append(sfun[index])
                 index += 1                
     # move stos to wyjscie LIFO
     while len(stos):
