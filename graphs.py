@@ -121,12 +121,13 @@ def check_op_after_cb(fun):
     return True
 
 def to_RPN(sfun,x_val):
+    
     """
     Function convert infix string to RPN
     i: string with function infix
     r: RPN[] 
     """
-    stos = []       #stack
+    stack = []       #stack
     wyjscie = []    #exit string
 
     index = 0
@@ -139,30 +140,28 @@ def to_RPN(sfun,x_val):
             wyjscie.append(float(num))            
             index += len(num)
             continue            
-        if is_fun:                              #if function put on stos
+        if is_fun:                              #if function put on stack
             fun = is_fun.group(0)
             fun = fun[:-1]                      #remove "("
             if fun in FUNCTIONS:
-                stos.append(fun)
+                stack.append(fun)
                 index += len(fun)
                 continue                
             else:
-                raise("Błąd! Nieznana funkcja.")
-        if sfun[index] == "(":                  #if "(" put on stos
-            stos.append(sfun[index])
+                raise("Error! Unknown Function.")
+        if sfun[index] == "(":                  #if "(" put on stack
+            stack.append(sfun[index])
             index += 1
             continue
         if sfun[index] == ")":                  
-            for i in range(len(stos)-1,0,-1):   #if ")" move all operands till "(" to wyjscie LIFO
-                if stos[i] == "(":
-                    del stos[i]
-                    if stos[i-1] in FUNCTIONS:
-                        wyjscie.append(stos[i-1])
-                        del stos[i-1]
+            for i in range(len(stack)-1,0,-1):   #if ")" move all operands till "(" to wyjscie LIFO
+                if stack[i] == "(":
+                    stack.pop()
+                    if stack[i-1] in FUNCTIONS:
+                        wyjscie.append(stack.pop())
                     break
                 else:
-                    wyjscie.append(stos[i])
-                    del stos[i]                
+                    wyjscie.append(stack.pop())
             index += 1
             continue
         if sfun[index].lower() == "x":                  #insert x value on wyjscie
@@ -174,34 +173,33 @@ def to_RPN(sfun,x_val):
                 wyjscie.append(0.0)
             elif sfun[index-1] == "(":
                 wyjscie.append(0.0)         #if operator is after openning bracket insert 0.0 before it
-            if not stos:                        #if stos is empty insert operator
-                stos.append(sfun[index])               
+            if not stack:                        #if stack is empty insert operator
+                stack.append(sfun[index])               
                 index += 1
                 continue
-            if OP_PRIO[sfun[index]] > OP_PRIO[stos[-1]]:    #if oper in fun has higher prio add it to stos
-                stos.append(sfun[index])
+            if OP_PRIO[sfun[index]] > OP_PRIO[stack[-1]]:    #if oper in fun has higher prio add it to stack
+                stack.append(sfun[index])
                 index += 1
                 continue            
             else:                                               
-                while len(stos):                                #if oper in fun has prio <= oper in stos
+                while len(stack):                                #if oper in fun has prio <= oper in stack
                                                                 #move all opers from stos to wyjscie with prio >= oper                     
-                    if (OP_PRIO[stos[-1]]>OP_PRIO[sfun[index]]
+                    if (OP_PRIO[stack[-1]]>OP_PRIO[sfun[index]]
                         or (
-                            OP_PRIO[stos[-1]] == (OP_PRIO[sfun[index]] 
+                            OP_PRIO[stack[-1]] == (OP_PRIO[sfun[index]] 
                             and OP_PRIO[sfun[index]]<3)
                         )
                     ): 
-                        wyjscie.append(stos[-1])
-                        del stos[-1]
+                        wyjscie.append(stack.pop())
                     else: break
-                stos.append(sfun[index])
+                stack.append(sfun[index])
                 index += 1                
-    # move stos to wyjscie LIFO
-    while len(stos):
-        if stos[-1] not in ["(",")",]:
-            wyjscie.append(stos[-1])
-        del stos[-1]
+    # move stack to wyjscie LIFO
+    while len(stack):
+        if stack[-1] not in ["(",")",]:
+            wyjscie.append(stack.pop())
     return wyjscie
+
 
 def eval_expr(fun, x_val = 1):
     """
